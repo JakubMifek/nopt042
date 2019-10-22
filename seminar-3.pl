@@ -15,10 +15,11 @@ smm(Sol):-
   N+10*C3 #= E+O+C2,
   O+10*M #= S+M+C3,
   all_different(Sol),
-  labeling([], Sol).
+  append(Sol, Carry, Vars),
+  labeling([], Vars).
 
 
-% DONALD+GERARD=ROBERT
+% DONALD+GERALD=ROBERT
 dgr(Sol):-
   Sol=[D,O,N,A,L,G,E,R,B,T],
   Carry=[C1, C2, C3, C4],
@@ -26,10 +27,11 @@ dgr(Sol):-
   domain([D,G,R],1,9),
   domain(Carry,0,1),
   T+10*C1 #= D+D,
-  R+10*C2 #= R+L+C1,
+  R+10*C2 #= L+L+C1,
   E+10*C3 #= A+A+C2,
   B+10*C4 #= R+N+C3,
   O+10*C5 #= E+O+C4,
   R       #= G+D+C5,
   all_different(Sol),
-  labeling([], Sol).
+  append(Sol, Carry, Vars),
+  labeling([], Vars).
