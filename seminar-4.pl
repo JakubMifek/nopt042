@@ -83,8 +83,8 @@ create_sub_arrays([H|T], Time, People):-
 % Fills allocations for an item. Allocation in time T is 0 if the item is not moving or Need if the item is moving.
 fill_allocations([], _, _, _, _):-!.
 fill_allocations([AH|AT], Idx, Start, End, Need):-
-	((Idx #< Start #\/ Idx #> End) #=> AH #= Need),
-	((Idx #>= Start #/\ Idx #=< End) #=> AH #= 0),
+	((Idx #< Start #\/ Idx #>= End) #=> AH #= 0),
+	((Idx #>= Start #/\ Idx #< End) #=> AH #= Need),
 	Idx2 is Idx+1,
 	fill_allocations(AT, Idx2, Start, End, Need).
 
@@ -108,7 +108,8 @@ assert_sum_each([AH1, AH2 | AT], Res2):-
 	assert_sum_each([Res|AT], Res2).
 	
 % Asserts that all allocations are consistent.
-assert_sum(Allocations, People, Res):-
+assert_sum(Allocations, People, Time, Res):-
+	length(Res, Time),
 	assert_sum_each(Allocations, Res),
 	domain(Res, 0, People).
 	
@@ -125,7 +126,7 @@ solve_move(Time, People, TimeNeeded, PeopleNeeded, Schedule):-
     % Conditions
     % Sum of people at a time must be lower or equal to people
     assert_people_at_times(Schedule, Allocations, TimeNeeded, PeopleNeeded),
-	assert_sum(Allocations, People, Res),
+	assert_sum(Allocations, People, Time, Res),
 
 	append(Res, Schedule, Vars),
 	
