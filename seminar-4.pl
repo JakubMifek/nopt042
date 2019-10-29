@@ -54,15 +54,38 @@ solve_knapsack(Capacity, Weights, Prices, Sol, P):-
     labeling([maximize(P)], Vars).
 
 %house move
-solve_move(Time, People, TimeNeeded, PeopleNeeded, ScheduleTime, SchedulePeople):-
+make_schedule_domains([], [], _):-!.
+make_schedule_domains([SH | ST], [TH | TT], Time):-
+    X is Time-TH,
+    domain([SH], 0, X),
+    make_schedule_domains(ST, TT, Time).
+
+sum_people(_, _, [], [], [], 0).
+sum_people(Start, End, [SH|ST], [TH|TT], [PH|PT], People):-
+    ((Start #< SH #/\ End #> SH + TH) #=> P #= PH) #\/ P #= 0,
+    sum_people(Start, End, ST, TT, PT, PS),
+    People #= P + PS.
+
+assert_people_at_times([], [], [], _):-!.
+assert_people_at_times([Start|ST], [Takes|TT], [PH|PT], People):-
+    End #= SH + Takes
+    sum_people(Start, End, ST, TT, PT, PS),
+    P #= PS + PH,
+    P #< People,
+    assert_people_at_times(ST, TT, PT, People).
+
+solve_move(Time, People, TimeNeeded, PeopleNeeded, Schedule):-
     % Declarations
-    length(TimeNeeded, N), length(PeopleNeeded, N), length(ScheduleTime, N), length(SchedulePeople, N),
-    domain(ScheduleTime, 0, Time),
-    domain(SchedulePeople, 0, People),
+    length(TimeNeeded, N), length(PeopleNeeded, N), length(Schedule, N),
+    length(Allocations, Time),
+
+    % Make domains
+    make_schedule_domains(Schedule, TimeNeeded, Time),
+    domain(Allocations, 0, People),
 
     % Conditions
-    ensure_people(People, TimeNeeded, PeopleNeeded, ScheduleTime, SchedulePeople),
+    % Sum of people at a time must be lower or equal to people
+    assert_people_at_times(Schedule, TimeNeeded, PeopleNeeded, People).
 
     % Solution
-    append(SchedulePeople, ScheduleTime, Vars),
-    labeling([minimize(T)], Vars).
+    labeling([], Schedule).
