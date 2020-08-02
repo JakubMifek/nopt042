@@ -1,13 +1,6 @@
 :-use_module(library(clpfd)).
 :-use_module(library(lists)).
 
-
-domain([], _, _).
-domain([H|T], I, A):-
-    H #>= I,
-    A #>= H,
-    domain(T, I, A).
-
 % Found [online](https://stackoverflow.com/questions/5628451/prolog-dot-product-with-variables-constraint-satisfaction)
 my_scalar_product([V|Vs], [C|Cs], Op, Value) :-
     construct_constraint(Vs, Cs, (V * C), Constr),
@@ -130,7 +123,7 @@ create_lunch_constraint(S,E,Y,I,1,[TH|TT],[ZH|ZT]):-
 lunch_constraint(_, E, E, _).
 lunch_constraint(P, S, E, [TH|TT]):-
     S1 is S+1,
-    P #==> TH #= 0,!, % If lunch is chosen, then time slot must be free
+    P #=> TH #= 0,!, % If lunch is chosen, then time slot must be free
     lunch_constraint(P, S1, E, TT).
 
 % Creates lecture constraints (that no two lectures can overlap)
@@ -167,25 +160,25 @@ table_constraint(P, S, E, [_|TT], I, 0):-
 
 % When right time slots found, book them if picked
 table_constraint(P, _, E, [TH|_], E, 1):- % Stopping condition
-    P #==> TH #= 1. % Book if picked
+    P #=> TH #= 1. % Book if picked
 
 table_constraint(P, S, E, [TH|TT], I, 1):- 
     I2 is I + 1,
-    P #==> TH #= 1, % Book if picked
+    P #=> TH #= 1, % Book if picked
     table_constraint(P, S, E, TT, I2, 1).
 
 % Create time constraint ensuring no two lectures overlap
 create_time_constraint(_, _, _, _, [], [], [], []).
 create_time_constraint(S, D, R, P, [SH|ST], [DH|DT], [RH|RT], [PH|PT]):-
     % Our priority is higher (don't pick them) [we don't care about us]
-               (PH #= 0) #<== ((S #>= SH #/\ S #=< SH+DH) #/\ R #> RH),
-               (PH #= 0) #<== ((SH #>= S #/\ SH #=< S+D) #/\ R #> RH),
+               (PH #= 0) #<= ((S #>= SH #/\ S #=< SH+DH) #/\ R #> RH),
+               (PH #= 0) #<= ((SH #>= S #/\ SH #=< S+D) #/\ R #> RH),
     % Our priority is the same (don't pick us) [we don't care about the other]
-                (P #= 0) #<== ((S #>= SH #/\ S #=< SH+DH) #/\ R #< RH),
-                (P #= 0) #<== ((SH #>= S #/\ SH #=< S+D) #/\ R #< RH),
+                (P #= 0) #<= ((S #>= SH #/\ S #=< SH+DH) #/\ R #< RH),
+                (P #= 0) #<= ((SH #>= S #/\ SH #=< S+D) #/\ R #< RH),
     % Our priorities are the same (do not pick both of us) [both of us might not get picked]
-    (PH #= 0 #\/ P #= 0) #<== ((S #>= SH #/\ S #=< SH+DH) #/\ R #= RH),
-    (PH #= 0 #\/ P #= 0) #<== ((SH #>= S #/\ SH #=< S+D) #/\ R #= RH),
+    (PH #= 0 #\/ P #= 0) #<= ((S #>= SH #/\ S #=< SH+DH) #/\ R #= RH),
+    (PH #= 0 #\/ P #= 0) #<= ((SH #>= S #/\ SH #=< S+D) #/\ R #= RH),
     create_time_constraint(S, D, R, P, ST, DT, RT, PT).
 
 % Example:

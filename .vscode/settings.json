@@ -13,7 +13,7 @@
       },
       {
         "match": ".*.pl",
-        "cmd": "clear; rlwrap /bin/swipl -l ${file}"
+        "cmd": "clear; rlwrap sicstus -l ${file}"
       }
     ]
   }
