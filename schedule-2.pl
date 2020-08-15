@@ -83,21 +83,22 @@ create_all_lunch_lectures(
     sum(Picks, #=, 1),
     create_all_lunch_lectures(1, Times, Duration, LecturesTail, PicksTail).
 
-% Lectures = [[[[start, stop], ...], credits, priority], ...]
-% Priority = 0 .. required, 1 .. subrequired, 2 .. optional
-% Options = [MinCreadits, MinRequiredCredits, MinSubrequiredCredits, LunchDuration, ReqRatio, SubreqRatio, OptionalRatio]
-% LunchBreak = 0 .. no, 1 .. yes
+% - Lectures = [[[[start, stop], ...], credits, priority], ...]
+%     Priority = 0 .. required, 1 .. subrequired, 2 .. optional
+% - Options = [MinCredits, MinRequiredCredits, MinSubrequiredCredits, LunchBreak, LunchDuration, ReqRatio, SubreqRatio, OptionalRatio]
+% + Picks
+% + CreditSum
 schedule(
     Lectures,
     [
         MinCredits,
         MinReqs,
         MinSubreqs,
+        LunchBreak,
         LunchDuration,
         ReqRatio,
         SubreqRatio,
-        OptionalRatio,
-        LunchBreak
+        OptionalRatio
     ],
     Picks,
     CreditSum
@@ -153,37 +154,58 @@ schedule(
 % Sunday:    864 - 1007
 
 % Test:
-:-
-    statistics(runtime, [Start|_]),
-    schedule(
-        [
-            [[[630, 639]], 3, 1],                        % NAIL013
-            [[[198, 207]], 3, 1],                        % NAIL052
-            [[[248, 257]], 3, 1],                        % NAIL061
-            [[[238, 247], [640, 649]], 3, 1],            % NAIL065
-            [[[218, 227], [ 54,  63]], 5, 1],            % NAIL068 v1
-            [[[218, 227], [ 64,  73]], 5, 1],            % NAIL068 v2
-            [[[372, 381]], 6, 1],                        % NAIL074
-            [[[ 84,  93]], 3, 1],                        % NAIL077
-            [[[516, 525], [526, 535]], 6, 1],            % NAIL086
-            [[[372, 381], [506, 515]], 6, 1],            % NAIL094
-            [[[342, 351], [352, 361]], 6, 1],            % NAIL101
-            [[[496, 505], [382, 391]], 6, 1],            % NAIL106 v1
-            [[[496, 505], [536, 545]], 6, 1],            % NAIL106 v2
-            [[[486, 490], [491, 495]], 6, 1],            % NAIL108
-            [[[74, 83], [228, 237], [352, 361]], 9, 1],  % NDBI023
-            [[[630, 639], [640, 649]], 5, 1],            % NMAI061
-            [[[342, 351], [352, 361]], 6, 1],            % NPFL068
-            [[[218, 222], [223, 227]], 3, 1],            % NPFL097
-            [[[634, 641]], 9, 1],                        % NPRG023
-            [[[ 74,  83], [218, 227]], 6, 1],            % NSWE001
-            [[[ 54,  72]], 3, 2],                        % NSWI054
-            [[[504, 517]], 1, 0],                        % Testing lecture
-            [[[490, 497]], 15, 2]                        % Testing lecture
-        ], [30, 0, 0, 4, 20, 15, 8, 1], P, C
-    ),
-    statistics(runtime, [Stop|_]),
-    R is (Stop - Start) / 1000,
-    format('\n  Picks: ~w\n', [P]),
-    format('Credits: ~w\n', [C]),
-    format('   Took: ~ws\n\n', [R]).
+% :-
+%     statistics(runtime, [Start|_]),
+%     schedule(
+%         [
+%             [[[630, 639]], 3, 1],                        % NAIL013
+%             [[[198, 207]], 3, 1],                        % NAIL052
+%             [[[248, 257]], 3, 1],                        % NAIL061
+%             [[[238, 247], [640, 649]], 3, 1],            % NAIL065
+%             [[[218, 227], [ 54,  63]], 5, 1],            % NAIL068 v1
+%             [[[218, 227], [ 64,  73]], 5, 1],            % NAIL068 v2
+%             [[[372, 381]], 6, 1],                        % NAIL074
+%             [[[ 84,  93]], 3, 1],                        % NAIL077
+%             [[[516, 525], [526, 535]], 6, 1],            % NAIL086
+%             [[[372, 381], [506, 515]], 6, 1],            % NAIL094
+%             [[[342, 351], [352, 361]], 6, 1],            % NAIL101
+%             [[[496, 505], [382, 391]], 6, 1],            % NAIL106 v1
+%             [[[496, 505], [536, 545]], 6, 1],            % NAIL106 v2
+%             [[[486, 490], [491, 495]], 6, 1],            % NAIL108
+%             [[[ 74,  83], [228, 237], [352, 361]], 9, 1],  % NDBI023
+%             [[[630, 639], [640, 649]], 5, 1],            % NMAI061
+%             [[[342, 351], [352, 361]], 6, 1],            % NPFL068
+%             [[[218, 222], [223, 227]], 3, 1],            % NPFL097
+%             [[[634, 641]], 9, 1],                        % NPRG023
+%             [[[ 74,  83], [218, 227]], 6, 1],            % NSWE001
+%             [[[ 54,  72]], 3, 2],                        % NSWI054
+%             [[[504, 517]], 1, 0],                        % Testing lecture
+%             [[[490, 497]], 15, 2]                        % Testing lecture
+%         ], [30, 0, 0, 1, 4, 20, 15, 8], P, C
+%     ),
+%     statistics(runtime, [Stop|_]),
+%     R is (Stop - Start) / 1000,
+%     format('\n  Picks: ~w\n',  [P]),
+%     format('Credits: ~w\n',    [C]),
+%     format('   Took: ~ws\n\n', [R]).
+
+% Test for lunch
+% :-
+%     schedule(
+%         [
+%             [[[0,9]],1,0],
+%             [[[10,19]],1,0],
+%             [[[20,29]],1,0],
+%             [[[30,39]],1,0],
+%             [[[40,49]],1,0],
+%             [[[50,59]],1,0],
+%             [[[60,69]],1,0],
+%             [[[70,79]],1,0],
+%             [[[80,89]],1,0],
+%             [[[90,99]],1,0],
+%             [[[100,109]],1,0],
+%             [[[110,119]],1,0],
+%             [[[120,129]],1,0],
+%             [[[130,139]],1,0]
+%         ], [0,0,0,1,4,1,1,1], P, C
+%     ).
